@@ -658,7 +658,9 @@ void CurieIMUClass::setMotionDetectionThreshold(float threshold)
 
 float CurieIMUClass::getZeroMotionDetectionThreshold()
 {
+    Serial.println("getZeroMotionDetectionThreshold");
     int bmiThreshold = BMI160Class::getZeroMotionDetectionThreshold();
+    Serial.println(bmiThreshold);
     float step;
 
     switch (getAccelerometerRange()) {
@@ -686,7 +688,8 @@ float CurieIMUClass::getZeroMotionDetectionThreshold()
 void CurieIMUClass::setZeroMotionDetectionThreshold(float threshold)
 {
     int bmiThreshold;
-
+    Serial.println("setZeroMotionDetectionThreshold");
+    Serial.println(threshold);
     switch (getAccelerometerRange()) {
         case 2:
             bmiThreshold = threshold / 3.91;
@@ -705,6 +708,8 @@ void CurieIMUClass::setZeroMotionDetectionThreshold(float threshold)
             bmiThreshold = threshold / 31.25;
             break;
     }
+
+    Serial.println(bmiThreshold);
 
     if (bmiThreshold < 0) {
         bmiThreshold = 0;
@@ -799,7 +804,7 @@ void CurieIMUClass::setDetectionDuration(int feature, float value)
             break;
 
         case CURIE_IMU_ZERO_MOTION:
-            setZeroMotionDetectionThreshold(value);
+            setZeroMotionDetectionDuration(value);
             break;
 
         case CURIE_IMU_TAP_QUIET:

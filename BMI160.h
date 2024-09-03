@@ -257,13 +257,30 @@ THE SOFTWARE.
 
 #define BMI160_CMD_START_FOC        0x03
 #define BMI160_CMD_ACC_MODE_NORMAL  0x11
+#define BMI160_CMD_ACC_MODE_LOWPOWER 0x12
+#define BMI160_CMD_ACC_MODE_SUSPEND  0x10
+#define BMI160_ACC_DELAY_MS          5
+#define BMI160_ACC_UNDERSAMPLING_MASK   0x80
+#define BMI160_INT_DATA_0_ADDR  0x58
 #define BMI160_CMD_GYR_MODE_NORMAL  0x15
+#define BMI160_CMD_GYR_MODE_NORMAL   0x15
+#define BMI160_CMD_GYR_MODE_SUSPEND  0x14
+#define BMI160_CMD_GYR_MODE_FASTSTARTUP 0x17
 #define BMI160_CMD_FIFO_FLUSH       0xB0
 #define BMI160_CMD_INT_RESET        0xB1
 #define BMI160_CMD_STEP_CNT_CLR     0xB2
 #define BMI160_CMD_SOFT_RESET       0xB6
 
 #define BMI160_RA_CMD               0x7E
+
+#define BMI160_OK                  0
+#define BMI160_E_OUT_OF_RANGE      -4 
+#define BMI160_RA_ERROR             0x02
+#define BMI160_E_ACCEL_ODR_BW_INVALID     -6
+#define BMI160_E_GYRO_ODR_BW_INVALID      -7
+#define BMI160_E_LWP_PRE_FLTR_INT_INVALID -8
+#define BMI160_E_LWP_PRE_FLTR_INVALID     -9
+
 
 /**
  * Interrupt Latch Mode options
@@ -651,6 +668,10 @@ class BMI160Class {
         void setInterruptLatch(uint8_t latch);
         void resetInterrupt();
 
+        void setAccelPowerMode(uint8_t mode);
+        void setGyroPowerMode(uint8_t mode);
+        int8_t checkInvalidSetting();
+
     protected:
         virtual int serial_buffer_transfer(uint8_t *buf, unsigned tx_cnt, unsigned rx_cnt);
 
@@ -659,6 +680,7 @@ class BMI160Class {
         void reg_write(uint8_t reg, uint8_t data);
         void reg_write_bits(uint8_t reg, uint8_t data, unsigned pos, unsigned len);
         uint8_t reg_read_bits(uint8_t reg, unsigned pos, unsigned len);
+        int8_t processUnderSampling(uint8_t powerMode);
 };
 
 #endif /* _BMI160_H_ */

@@ -36,15 +36,16 @@ bool BMI160GenClass::begin(Mode mode, const int arg1, const int arg2)
     return CurieIMUClass::begin();
 }
 
-void BMI160GenClass::attachInterrupt(void (*callback)(void))
+void BMI160GenClass::attachInterrupt(void (*callback)(void), int mode)
 {
     CurieIMUClass::attachInterrupt(NULL);
     if (0 <= interrupt_pin) {
-        ::attachInterrupt(interrupt_pin, callback, FALLING); 
+        ::attachInterrupt(interrupt_pin, callback, mode); 
     } else {
         Serial.println("BMI160GenClass::attachInterrupt: No valid interruption pin.");
     }
 }
+
 
 void BMI160GenClass::ss_init()
 {

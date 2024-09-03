@@ -78,6 +78,82 @@ uint8_t BMI160Class::reg_read_bits(uint8_t reg, unsigned pos, unsigned len)
     return b;
 }
 
+int8_t BMI160Class::processUnderSampling(uint8_t powerMode) {
+    int8_t rslt = BMI160_OK;
+    uint8_t config = 0;
+    uint8_t pre_filter = 0;
+
+    // Read the current accelerometer configuration
+    config = reg_read(BMI160_RA_ACCEL_CONF);
+
+    // Check if we're in low power mode
+    if (powerMode == BMI160_CMD_ACC_MODE_LOWPOWER) {
+        // Enable undersampling by setting the bit defined by the mask
+        config |= BMI160_ACC_UNDERSAMPLING_MASK;
+        reg_write(BMI160_RA_ACCEL_CONF, config);
+
+        // Disable pre-filter data in low power mode
+        reg_write(BMI160_INT_DATA_0_ADDR, pre_filter);
+    } else {
+        // Disable undersampling if it was previously enabled
+        config &= ~BMI160_ACC_UNDERSAMPLING_MASK;
+        reg_write(BMI160_RA_ACCEL_CONF, config);
+    }
+
+    return rslt;
+}
+
+void BMI160Class::setAccelPowerMode(uint8_t mode) {
+    processUnderSampling(mode);
+    // Write the desired power mode to the command register
+    reg_write(BMI160_RA_CMD, mode);
+    
+    // Add a delay if necessary based on the mode
+    if (mode == BMI160_CMD_ACC_MODE_LOWPOWER || mode == BMI160_CMD_ACC_MODE_SUSPEND) {
+        delay(BMI160_ACC_DELAY_MS); // Adjust this delay based on the datasheet recommendations
+    }
+}
+
+void BMI160Class::setGyroPowerMode(uint8_t mode) {
+    // Write the desired power mode to the command register
+    reg_write(BMI160_RA_CMD, mode);
+    
+    // Add a delay if necessary based on the mode
+    if (mode == BMI160_CMD_GYR_MODE_SUSPEND || mode == BMI160_CMD_GYR_MODE_FASTSTARTUP) {
+        delay(100); // Adjust this delay based on the datasheet recommendations
+    } else if (mode == BMI160_CMD_GYR_MODE_NORMAL) {
+        delay(10); // Delay for transition from fast-startup to normal mode
+    }
+}
+
+
+int8_t BMI160Class::checkInvalidSetting() {
+    int8_t rslt = BMI160_OK;
+    uint8_t data = 0;
+
+    // Read the error register
+    data = reg_read(BMI160_RA_ERROR);
+
+    // Extract relevant bits and mask
+    data = (data >> 1) & 0x07; // 0x07 is the equivalent of BMI160_ERR_REG_MASK
+
+    // Check for specific errors based on the masked value
+    if (data == 1) {
+        rslt = BMI160_E_ACCEL_ODR_BW_INVALID;
+    } else if (data == 2) {
+        rslt = BMI160_E_GYRO_ODR_BW_INVALID;
+    } else if (data == 3) {
+        rslt = BMI160_E_LWP_PRE_FLTR_INT_INVALID;
+    } else if (data == 7) {
+        rslt = BMI160_E_LWP_PRE_FLTR_INVALID;
+    }
+
+    return rslt;
+}
+
+
+
+
 /******************************************************************************/
 
 /** Power on and prepare for general usage.
